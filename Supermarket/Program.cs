@@ -15,9 +15,11 @@ namespace Supermarket
             const string CommandStop = "2";
 
             bool isWork = true;
+            Random random = new Random();
             Supermarket supermarket = new Supermarket();
             supermarket.CreateAssortment();
             CashDesk cashDesk = new CashDesk();
+            cashDesk.FormQueueClients(random);
 
             while (isWork)
             {
@@ -29,7 +31,7 @@ namespace Supermarket
                 switch (userInput)
                 {
                     case CommandStart:
-                        Start(supermarket,cashDesk);
+                        Start(supermarket, cashDesk);
                         break;
 
                     case CommandStop:
@@ -47,11 +49,9 @@ namespace Supermarket
 
         private static void Start(Supermarket supermarket, CashDesk cashDesk)
         {
-            Client client = new Client();
-            client.SelectProduct(supermarket);
-            cashDesk.CalculateClient(client);
-            Console.WriteLine($"Супермаркет заработал {client.GetCartCost()} !");
-            supermarket.GetCashGeskMoney(client);
+            Random randomQuantityMoney = new Random();
+            cashDesk.GetClient(randomQuantityMoney).SelectProduct(supermarket);
+            cashDesk.CalculateClient(cashDesk.GetClient(randomQuantityMoney), supermarket);
         }
     }
 
@@ -83,7 +83,15 @@ namespace Supermarket
 
         public int GetCashGeskMoney(Client client)
         {
-           return Money += client.GetCartCost();
+            if (client.GetCartCost() == 0)
+            {
+                Console.WriteLine("Клиенту не хватило денег на оплату товаров, отменили все товары в его корзине, клиент уходит!");
+                return 0;
+            }
+            else
+            {
+                return Money += client.GetCartCost();
+            }
         }
     }
 
@@ -93,26 +101,62 @@ namespace Supermarket
 
         public int SupermarketIncome { get; private set; }
 
-        public void CalculateClient(Client client)
+        public void CalculateClient(Client client, Supermarket supermarket)
         {
-            Console.WriteLine("Новый клиент пришёл в наш супермаркет!");
-            _clients.Enqueue(client);
+            Console.WriteLine("Обслуживаем текущего клиента на кассе...");
             Console.WriteLine("У него в корзине следующие товары:");
             client.ShowProductInCart();
 
-            if (SolvencyClient(client))
+            if (CheckSolvencyClient(client))
             {
+                Console.WriteLine($"У клиента {client.Money} денег, а товары в его корзине стоят {client.GetCartCost()} !");
                 Console.WriteLine("У клиента хватило денег для оплаты товаров! Клиент уходит.");
+                supermarket.GetCashGeskMoney(client);
+                Console.WriteLine($"Супермаркет заработал {client.GetCartCost()} !");
                 _clients.Dequeue();
             }
             else
             {
                 Console.WriteLine($"У клиента {client.Money} денег, а товары в его корзине стоят {client.GetCartCost()} !");
-                client.ThrowOutRandomProduct();
+                Random randomProduct = new Random();
+
+                while (client.Money < client.GetCartCost())
+                {
+                    client.ThrowOutRandomProduct(randomProduct);
+                }
+                Console.WriteLine($"У клиента {client.Money} денег, а оставшиеся товары в его корзине стоят {client.GetCartCost()}.");
+                Console.WriteLine($"Клиент оплачивает оставшиеся товары и уходит !");
+                supermarket.GetCashGeskMoney(client);
+                Console.WriteLine($"Супермаркет заработал {client.GetCartCost()} !");
+                _clients.Dequeue();
+            }
+            Console.WriteLine($"В очереди осталось {_clients.Count} клиентов.");
+        }
+
+        public void FormQueueClients(Random randomQuantityMoney)
+        {
+            Client[] queueClients = { new Client(randomQuantityMoney), new Client(randomQuantityMoney),
+                new Client(randomQuantityMoney),new Client(randomQuantityMoney),new Client(randomQuantityMoney),
+                new Client(randomQuantityMoney), new Client(randomQuantityMoney),new Client(randomQuantityMoney),
+                new Client(randomQuantityMoney), new Client(randomQuantityMoney)};
+
+            for (int i = 0; i < queueClients.Length; i++)
+            {
+                _clients.Enqueue(queueClients[i]);
             }
         }
 
-        private bool SolvencyClient(Client client)
+        public Client GetClient(Random randomQuantityMoney)
+        {
+            if(_clients.Count == 0)
+            {
+                Console.WriteLine("Новый клиент пришёл в наш супермаркет!");
+                _clients.Enqueue(new Client(randomQuantityMoney));
+            }
+            return _clients.First();
+        }
+
+        private bool CheckSolvencyClient(Client client)
         {
             return client.Money > client.GetCartCost();
         }
@@ -124,9 +168,8 @@ namespace Supermarket
 
         public int Money { get; private set; }
 
-        public Client()
+        public Client(Random randomQuantityMoney)
         {
-            Random randomQuantityMoney = new Random();
             int minQuantityMoney = 300;
             int maxQuantityMoney = 1500;
             Money = randomQuantityMoney.Next(minQuantityMoney, maxQuantityMoney);
@@ -143,11 +186,6 @@ namespace Supermarket
             }
         }
 
-        public int GetShoppingCartCapasity()
-        {
-            return _shoppingCart.Count();
-        }
-
         public int GetCartCost()
         {
             int totalShoppingCartCost = 0;
@@ -160,20 +198,15 @@ namespace Supermarket
             return totalShoppingCartCost;
         }
 
-        public void ThrowOutRandomProduct()
+        public void ThrowOutRandomProduct(Random randomProduct)
         {
-            Random randomProduct = new Random();
-
-            while (Money < GetCartCost())
-            {
-                Console.WriteLine("Отменяем случайный товар из корзины клиента...");
-                int minProductIndex = 0;
-                int maxProductIndex = _shoppingCart.Count;
-                _shoppingCart.Remove(_shoppingCart[randomProduct.Next(minProductIndex, maxProductIndex)]);
-                ShowProductInCart();
-                Console.ReadKey();
-                Console.Clear();
-            }
+            Console.WriteLine("\nОтменяем случайный товар из корзины клиента...");
+            int minProductIndex = 0;
+            int maxProductIndex = _shoppingCart.Count;
+            _shoppingCart.Remove(_shoppingCart[randomProduct.Next(minProductIndex, maxProductIndex)]);
+            ShowProductInCart();
+            Console.ReadKey();
+            Console.Clear();
         }
 
         public void ShowProductInCart()
