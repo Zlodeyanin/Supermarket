@@ -76,7 +76,9 @@ namespace Supermarket
 
         public void Work()
         {
-            GetClient().SelectProduct(_assortment);
+            Product[] catalog = new Product[_assortment.Count];
+            _assortment.CopyTo(catalog);
+            GetClient().SelectProduct(catalog);
             CalculateClient(GetClient());
         }
 
@@ -161,14 +163,14 @@ namespace Supermarket
 
         public int Money { get; private set; }
 
-        public void SelectProduct(List<Product> assortment)
+        public void SelectProduct(Product[] catalog)
         {
             int shopingCartCapacity = 5;
             int assortmentMinIndex = 0;
 
             for (int i = 0; i <= shopingCartCapacity; i++)
             {
-                _shoppingCart.Add(assortment[UserUtils.GenerateRandomNumber(assortmentMinIndex, assortment.Count)]);
+                _shoppingCart.Add(catalog[UserUtils.GenerateRandomNumber(assortmentMinIndex, catalog.Length)]);
             }
         }
 
