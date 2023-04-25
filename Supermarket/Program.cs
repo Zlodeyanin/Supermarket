@@ -80,34 +80,6 @@ namespace Supermarket
             CalculateClient(GetClient());
         }
 
-        public void SelectProduct()
-        {
-            for (int i = 0; i < _clients.Count; i++)
-            {
-                _clients.First().SelectProduct(_assortment);
-            }
-        }
-
-        public Product GetRandomProduct()
-        {
-            int minProductIndex = 0;
-            int maxProductIndex = _assortment.Count;
-            return _assortment[UserUtils.GenerateRandomNumber(minProductIndex, maxProductIndex)];
-        }
-
-        public int GetCashGeskMoney(Client client)
-        {
-            if (client.GetCartCost() == 0)
-            {
-                Console.WriteLine("Клиенту не хватило денег на оплату товаров, отменили все товары в его корзине, клиент уходит!");
-                return 0;
-            }
-            else
-            {
-                return Money += client.GetCartCost();
-            }
-        }
-
         public void FormQueueClients()
         {
             int countClients = 10;
@@ -118,7 +90,7 @@ namespace Supermarket
             }
         }
 
-        public void CalculateClient(Client client)
+        private void CalculateClient(Client client)
         {
             Console.WriteLine("Обслуживаем текущего клиента на кассе...");
             Console.WriteLine("У него в корзине следующие товары:");
@@ -151,7 +123,7 @@ namespace Supermarket
             Console.WriteLine($"В очереди осталось {_clients.Count} клиентов.");
         }
 
-        public Client GetClient()
+        private Client GetClient()
         {
             if (_clients.Count == 0)
             {
@@ -160,6 +132,19 @@ namespace Supermarket
             }
 
             return _clients.First();
+        }
+
+        private int GetCashGeskMoney(Client client)
+        {
+            if (client.GetCartCost() == 0)
+            {
+                Console.WriteLine("Клиенту не хватило денег на оплату товаров, отменили все товары в его корзине, клиент уходит!");
+                return 0;
+            }
+            else
+            {
+                return Money += client.GetCartCost();
+            }
         }
     }
 
@@ -179,10 +164,11 @@ namespace Supermarket
         public void SelectProduct(List<Product> assortment)
         {
             int shopingCartCapacity = 5;
+            int assortmentMinIndex = 0;
 
             for (int i = 0; i <= shopingCartCapacity; i++)
             {
-                _shoppingCart.Add(assortment[UserUtils.GenerateRandomNumber(0,assortment.Count)]);
+                _shoppingCart.Add(assortment[UserUtils.GenerateRandomNumber(assortmentMinIndex, assortment.Count)]);
             }
         }
 
