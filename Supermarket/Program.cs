@@ -26,7 +26,7 @@ namespace Supermarket
                 switch (userInput)
                 {
                     case CommandStart:
-                        Start(supermarket);
+                        supermarket.Work();
                         break;
 
                     case CommandStop:
@@ -41,12 +41,6 @@ namespace Supermarket
                 Console.ReadKey();
                 Console.Clear();
             }
-        }
-
-        private static void Start(Supermarket supermarket)
-        {
-            supermarket.GetClient().SelectProduct(supermarket);
-            supermarket.CalculateClient(supermarket.GetClient());
         }
     }
 
@@ -78,6 +72,20 @@ namespace Supermarket
             _assortment.Add(new Product("шампунь", 230));
             _assortment.Add(new Product("туалетная бумага", 130));
             _assortment.Add(new Product("шоколадка", 70));
+        }
+
+        public void Work()
+        {
+            GetClient().SelectProduct(_assortment);
+            CalculateClient(GetClient());
+        }
+
+        public void SelectProduct()
+        {
+            for (int i = 0; i < _clients.Count; i++)
+            {
+                _clients.First().SelectProduct(_assortment);
+            }
         }
 
         public Product GetRandomProduct()
@@ -168,13 +176,13 @@ namespace Supermarket
 
         public int Money { get; private set; }
 
-        public void SelectProduct(Supermarket assortment)
+        public void SelectProduct(List<Product> assortment)
         {
             int shopingCartCapacity = 5;
 
             for (int i = 0; i <= shopingCartCapacity; i++)
             {
-                _shoppingCart.Add(assortment.GetRandomProduct());
+                _shoppingCart.Add(assortment[UserUtils.GenerateRandomNumber(0,assortment.Count)]);
             }
         }
 
@@ -229,11 +237,6 @@ namespace Supermarket
         public void ShowInfo()
         {
             Console.WriteLine($"Товар {Name} стоимостью - {Cost} .");
-        }
-
-        public Product GetProduct()
-        {
-            return new Product(Name, Cost);
         }
     }
 }
